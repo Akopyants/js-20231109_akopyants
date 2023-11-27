@@ -9,12 +9,12 @@ export default class SortableTable {
 
     if (sorted) {
       const { id, order } = sorted;
-      this.data = this.sortedData(id, order);
+      this.data = this.getSortedData(id, order);
     }
 
     this.element = this.createElement(this.createTemplate());
     this.selectSubElements();
-    this.setupEventListeners();
+    this.createEventListeners();
   }
 
   createElement(html) {
@@ -23,14 +23,16 @@ export default class SortableTable {
     return element.firstElementChild;
   }
 
-  setupEventListeners() {
-    this.subElements.header.addEventListener("click", this.handleHeaderClick);
+  createEventListeners() {
+    this.subElements.header.addEventListener("pointerdown", this.handleHeaderClick);
+  }
+
+  destroyEventListeners() {
+    this.subElements.header.removeEventListener("pointerdown", this.handleHeaderClick);
   }
 
   selectSubElements() {
-    const subElements = Array.from(
-      this.element.querySelectorAll("[data-element]")
-    );
+    const subElements = Array.from(this.element.querySelectorAll("[data-element]"));
 
     subElements.forEach((element) => {
       const name = element.dataset.element;
@@ -54,9 +56,9 @@ export default class SortableTable {
   createHeaderTemplate() {
     return this.headersConfig
       .map(({ id, sortable, title }) => {
-        const dataOrder = id === this.sorted.id ? this.sorted.order : "";
+        const order = id === this.sorted.id ? this.sorted.order : "";
 
-        return `<div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}" data-order="${dataOrder}">
+        return `<div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}" data-order="${order}">
                   <span>${title}</span>
                   ${this.createLinkTemplate(sortable)}
                 </div>`;
@@ -93,16 +95,14 @@ export default class SortableTable {
   }
 
   sortOnClient(fieldValue, orderValue) {
-    const sortedData = this.sortedData(fieldValue, orderValue);
-    const currentColumn = this.element.querySelector(
-      `.sortable-table__cell[data-id="${fieldValue}"]`
-    );
+    const getSortedData = this.getSortedData(fieldValue, orderValue);
+    const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id="${fieldValue}"]`);
     currentColumn.dataset.order = orderValue;
 
-    this.updateBody(sortedData);
+    this.updateBody(getSortedData);
   }
 
-  sortedData(fieldValue, orderValue) {
+  getSortedData(fieldValue, orderValue) {
     const direction = orderValue === "asc" ? 1 : -1;
     let sortFunction;
 
@@ -111,8 +111,7 @@ export default class SortableTable {
     })[0];
 
     if (sortType === "string") {
-      sortFunction = (a, b) =>
-        direction * a[fieldValue].localeCompare(b[fieldValue], ["ru", "en"]);
+      sortFunction = (a, b) => direction * (a[fieldValue].localeCompare(b[fieldValue], ['ru', 'en']));
     }
     if (sortType === "number") {
       sortFunction = (a, b) => direction * (a[fieldValue] - b[fieldValue]);
@@ -122,26 +121,24 @@ export default class SortableTable {
   }
 
   sortOnClient(fieldValue, orderValue) {
-    const sortedData = this.sortedData(fieldValue, orderValue);
-    const currentColumn = this.element.querySelector(
-      `.sortable-table__cell[data-id="${fieldValue}"]`
-    );
+    const getSortedData = this.getSortedData(fieldValue, orderValue);
+    const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id="${fieldValue}"]`);
     currentColumn.dataset.order = orderValue;
 
-    this.updateBody(sortedData);
+    this.updateBody(getSortedData);
   }
 
   sortOnServer() {}
 
-  updateBody(sortedData) {
-    this.subElements.body.innerHTML = this.createBodyTemplate(sortedData);
+  updateBody(getSortedData) {
+    this.subElements.body.innerHTML = this.createBodyTemplate(getSortedData);
   }
 
   createLinkTemplate(sortable) {
     return sortable
       ? `<span data-element="arrow" class="sortable-table__sort-arrow">
-                        <span class="sort-arrow"></span>
-                      </span>`
+          <span class="sort-arrow"></span>
+        </span>`
       : "";
   }
 
@@ -151,7 +148,7 @@ export default class SortableTable {
     const { sortable, order } = headerTitle.dataset;
 
     if (sortable === "true") {
-      const newOrder = order === "asc" ? "desc" : "asc";
+      const newOrder = order === 'desc' ? 'asc' : 'desc';
       headerTitle.setAttribute("data-order", newOrder);
       this.subElements.header
         .querySelectorAll(".sortable-table__cell")
@@ -165,6 +162,7 @@ export default class SortableTable {
   }
 
   destroy() {
+    this.destroyEventListeners();
     this.remove();
   }
 }
