@@ -17,6 +17,7 @@ export default class SortableTable {
     this.createEventListeners();
   }
 
+  
   createElement(html) {
     const element = document.createElement("div");
     element.innerHTML = html;
