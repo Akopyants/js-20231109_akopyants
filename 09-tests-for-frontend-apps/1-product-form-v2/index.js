@@ -180,16 +180,14 @@ export default class ProductForm {
   async getProductInfo() {
     const url = new URL(`${BACKEND_URL}/api/rest/products?`);
     url.searchParams.set('id', this.productId);
-    const data = await fetchJson(url);
-    return data;
+    return await fetchJson(url);
   }
 
   async getCategories() {
     const url = new URL(`${BACKEND_URL}/api/rest/categories?`);
     url.searchParams.set('_sort', 'weight');
     url.searchParams.set('_refs', 'subcategory');
-    const data = await fetchJson(url);
-    return data;
+    return await fetchJson(url);
   }
 
   fillFormData() {
